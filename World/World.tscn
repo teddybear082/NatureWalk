@@ -2,7 +2,7 @@
 
 [ext_resource path="res://World/World.gd" type="Script" id=1]
 [ext_resource path="res://Audio/Cold Winter Snow and Wind.mp3" type="AudioStream" id=2]
-[ext_resource path="res://Interface/MainMenu.tscn" type="PackedScene" id=3]
+[ext_resource path="res://Player/Player.tscn" type="PackedScene" id=3]
 [ext_resource path="res://Audio/Katydids in the Night.mp3" type="AudioStream" id=4]
 
 [sub_resource type="ProceduralSky" id=3]
@@ -24,34 +24,10 @@ fog_depth_begin = 0.0
 
 [sub_resource type="Animation" id=4]
 length = 0.001
-tracks/0/type = "value"
-tracks/0/path = NodePath("ColorRect:color")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 0,
-"values": [ Color( 0, 0, 0, 1 ) ]
-}
 
 [sub_resource type="Animation" id=5]
 resource_name = "start"
 length = 5.0
-tracks/0/type = "value"
-tracks/0/path = NodePath("ColorRect:color")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/keys = {
-"times": PoolRealArray( 0, 5 ),
-"transitions": PoolRealArray( 1, 1 ),
-"update": 0,
-"values": [ Color( 0, 0, 0, 1 ), Color( 0, 0, 0, 0 ) ]
-}
 
 [node name="World" type="Node"]
 script = ExtResource( 1 )
@@ -76,16 +52,9 @@ autoplay = true
 stream = ExtResource( 4 )
 autoplay = true
 
-[node name="MainMenu" parent="." instance=ExtResource( 3 )]
-transform = Transform( 1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, 0, 20, 0 )
-
-[node name="ColorRect" type="ColorRect" parent="."]
-anchor_right = 1.0
-anchor_bottom = 1.0
-mouse_filter = 2
-input_pass_on_modal_close_click = false
-color = Color( 0, 0, 0, 1 )
-
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 anims/RESET = SubResource( 4 )
 anims/start = SubResource( 5 )
+
+[node name="Player" parent="." instance=ExtResource( 3 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 30, 0 )

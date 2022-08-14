@@ -9,7 +9,7 @@ var chunk_size = 16
 var chunks = {}
 var unready_chunks = {}
 
-var player = preload("res://Player/Player.tscn").instance()
+onready var player = $Player
 onready var anim = $AnimationPlayer
 
 func _ready():
