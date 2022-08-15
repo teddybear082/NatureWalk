@@ -87,10 +87,10 @@ func _ready():
 	add_child(water)
 	
 	# add grass
-	var muitimesh = MultiMeshInstance.new()
-	muitimesh.set_multimesh(grass)
-	muitimesh.set_cast_shadows_setting(0)
-	add_child(muitimesh)
+	var multimesh = MultiMeshInstance.new()
+	multimesh.set_multimesh(grass)
+	multimesh.set_cast_shadows_setting(0)
+	add_child(multimesh)
 	
 	# randomly add rock or tree
 	rng.randomize()

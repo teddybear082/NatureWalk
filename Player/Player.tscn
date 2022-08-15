@@ -36,7 +36,6 @@ collision_layer = 131072
 margin = 0.004
 
 [node name="PlayerBody" parent="." index="4" instance=ExtResource( 6 )]
-collision_layer = 524291
 
 [node name="Function_Flight_movement" parent="." index="5" instance=ExtResource( 3 )]
 
@@ -44,6 +43,3 @@ collision_layer = 524291
 
 [node name="Locomotion_WalkInPlace" parent="." index="7" instance=ExtResource( 7 )]
 fpcontroller_path = NodePath("..")
-arvrcamera_path = NodePath("../ARVRCamera")
-l_controller_path = NodePath("../LeftHandController")
-r_controller_path = NodePath("../RightHandController")
