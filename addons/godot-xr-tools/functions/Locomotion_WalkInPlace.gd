@@ -20,7 +20,8 @@ extends MovementProvider
 
 ## Movement provider order
 export var order := 5
-
+export var speed_walking = 2.0
+export var speed_jogging = 4.0
 
 
 const _height_ringbuffer_size := 15; # full ring buffer is 15; lower latency can be achieved by accessing only a subset
@@ -43,8 +44,25 @@ const _variance_height_detect_threshold = 0.001;
 var _had_high_step_after_low := false;
 
 var _last_step_time_s := 0.0; # time elapsed after the last step was detected
-const _fastest_step_s := 10.0/72.0; # faster then this will not detect a new step
-const _slowest_step_s := 25.0/72.0; # slower than this will not detect a high point step
+var _fastest_step_s := 0.0 
+var _slowest_step_s := 0.0 
+
+
+var step_duration := 0.0 
+var _step_time := 0.0;
+
+#var speed_walking := 0.0 
+#var speed_jogging := 0.0 
+
+var num_steps_till_jogging := 2;
+
+var _continous_step_count := 0;
+const _time_until_continous_step_reset = 2.0; #was 2.0, tb changed to 1
+
+# indicator to check if currently in a moving state (means steps detected)
+# not actually moving; this depends still on the move_cheker
+var is_moving = false;
+
 
 var _current_height_estimate := 0.0;
 
@@ -73,6 +91,9 @@ var l_controller = null
 var r_controller = null
 var player_body = null
 
+var headset_refresh_rate = 72.0
+var max_speed = 10
+
 func _ready():
 	fp_controller = get_node(fpcontroller_path)
 	vr_camera = get_node(arvrcamera_path)
@@ -80,8 +101,27 @@ func _ready():
 	r_controller = get_node(r_controller_path)
 	player_body = fp_controller.get_node("PlayerBody")
 	
+	if fp_controller.get_node("Configuration").get_refresh_rate() != 0:
+		print("Walk in place got a zero refresh rate back from Configuration node")
+		headset_refresh_rate = fp_controller.get_node("Configuration").get_refresh_rate()
+	
+	print("Walk in place detects headset refresh rate as:")
+	print(headset_refresh_rate)
+	
+	_fastest_step_s = .132 * (headset_refresh_rate/72.0); # faster then this will not detect a new step - new TB note - this was 10.0/72.0, e.g., .132, tied to quest 72 refresh
+	_slowest_step_s = .347 * (headset_refresh_rate/72.0); # slower than this will not detect a high point step - new TB note - this was 25.0/72.0, e.g., .347, tied to quest 72 refresh
+	
+	step_duration = 20.0 / headset_refresh_rate #20.0 / 72.0; # I had ~ 30 frames between steps...   #TB note - this was hard coded at 20/72, trying to match headset refresh rate, was also marked as a const instead of a variable
+	#speed_walking = #5.0 / (.05 * headset_refresh_rate); # km/h TB note: was 5.0 / 3.6, felt too slow; then I changed it to 10.0/3.6; possibly 3.6 was tied to 72 hz refresh - 5 percent of refresh rate - not sure this actually has to be tied though, could just be a constant
+	#speed_jogging = #10.0 / (.05 * headset_refresh_rate); # km/h TB note: was 10.0 / 3.6, felt too slow; then I changed it to 15.0/3.6 possibly 3.6 was tied to 72 hz refresh - 5 percent of refresh rate, not sure this actually has to be tied to headset though, could just be a constant
+
+	
+	
 	_height_ringbuffer.resize(_height_ringbuffer_size);
-	_current_height_estimate = player_body.camera_node.transform.origin.y + player_body.player_radius
+	_current_height_estimate = vr_camera.transform.origin.y
+	
+	#this used to be _current_height_estimate = player_body.camera_node.transform.origin.y + player_body_player_radius but only worked on quest so trying new code above
+	
 	#TB Code: if the above equation doesn't work, note this used to be a reference to 
 	#func get_current_player_height():
 	#return vrCamera.global_transform.origin.y - vrOrigin.global_transform.origin.y;
@@ -190,26 +230,15 @@ func _detect_step(dt):
 	return NO_STEP;
 
 
-const step_duration := 20.0 / 72.0; # I had ~ 30 frames between steps...
-var _step_time := 0.0;
-
-var speed_walking := 10.0 / 3.6; # km/h TB note: was 5.0 / 3.6, felt too slow
-var speed_jogging := 15.0 / 3.6; # km/h TB note: was 10.0 / 3.6, felt too slow
-
-var num_steps_till_jogging := 2;
-
-var _continous_step_count := 0;
-const _time_until_continous_step_reset = 1.0; #was 2.0
-
-# indicator to check if currently in a moving state (means steps detected)
-# not actually moving; this depends still on the move_cheker
-var is_moving = false;
-
 
 func is_jogging() -> bool:
 	return _continous_step_count > num_steps_till_jogging;
 
-func _move(dt):
+
+func physics_movement(delta: float, player_body: PlayerBody, _disabled: bool):
+	
+	# Apply forwards/backwards ground control
+
 	var view_dir = -vr_camera.global_transform.basis.z;
 	view_dir.y = 0.0;
 	view_dir = view_dir.normalized();
@@ -217,30 +246,41 @@ func _move(dt):
 	var speed = speed_walking;
 	
 	if (is_jogging()):
-		 speed = speed_jogging;
+		print("jogging detected")
+		speed = speed_jogging;
+		print(speed)
 	
+	if is_moving == true:
+		#move player at either the walking or jogging speed as appropriate
+		player_body.ground_control_velocity.y += speed
+
+		# Clamp ground control like in direct movement script
+		player_body.ground_control_velocity.y = clamp(player_body.ground_control_velocity.y, -max_speed, max_speed)
+		print("player ground control velocityy is:")
+		print(player_body.ground_control_velocity)
+		
+	else:  #this means no steps are detected, player is standing
+		player_body.ground_control_velocity.y = 0
 	
-	var actual_translation = view_dir * speed * dt;
-	if (move_checker):
-		actual_translation = move_checker.oq_walk_in_place_check_move(actual_translation, speed);
-	
-	fp_controller.translation += actual_translation;
+	#fp_controller.translation += actual_translation;
 #TB note: could try instead of the line above: 
-	#player_body.ground_control_velocity += actual_translation
+	#player_body.ground_control_velocity.y += actual_translation.z
 #TB note: or could try 
 	#player_body.ground_control_velocity.y += speed * dt {note: this threw an error for mixing vectors and floats}
-	#player_body.velocity += actual_translation * 10 {note: this seemed too slow without a modifier}
+	#player_body.velocity += actual_translation * 10 #{note: this seemed too slow without a modifier}
 	
 #TB note: I don't understand why we're not moving the player body instead of the origin translation...but the above code seems to work so leaving it for someone smarter to figure out.
 
 # NOTE: this needs to be in the _process as all the values are tied to the actual display framerate of 72hz
 #       at the moment
 
-#Add'l TB note - maybe this should be physics_process??
+#Add'l TB note - maybe this should be physics_process??  this was func _process(dt)
 func _process(dt):
 	if (!enabled): return;
 		
-	var headset_height = player_body.camera_node.transform.origin.y + player_body.player_radius;
+	var headset_height = vr_camera.transform.origin.y;
+	#was headset_height = player_body.camera_node.transform.origin.y + player_body.player_radius but only worked on quest
+	
 	#TB Code: if the above equation doesn't work, note this used to be a reference to 
 	#func get_current_player_height():
 	#return vrCamera.global_transform.origin.y - vrOrigin.global_transform.origin.y;
@@ -269,7 +309,8 @@ func _process(dt):
 
 	if (_step_time > 0.0):
 		is_moving = true;
-		_move(dt);
+		physics_movement(dt, player_body, true);
+		
 	else:
 		is_moving = false;
 		#if (_step_time < -_time_until_continous_step_reset):
