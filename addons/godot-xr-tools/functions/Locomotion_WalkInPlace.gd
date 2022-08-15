@@ -92,6 +92,7 @@ var r_controller = null
 var player_body = null
 
 var headset_refresh_rate = 72.0
+var headset_refresh_set = false
 var max_speed = 10
 
 func _ready():
@@ -278,6 +279,22 @@ func physics_movement(delta: float, player_body: PlayerBody, _disabled: bool):
 #Add'l TB note - maybe this should be physics_process??  this was func _process(dt)
 func _process(dt):
 	if (!enabled): return;
+		
+	if headset_refresh_set == false:
+		if fp_controller.get_node("Configuration").get_refresh_rate() != 0:
+			headset_refresh_rate = fp_controller.get_node("Configuration").get_refresh_rate()
+			print("Walk in place got a headset refresh rate from the headset:")
+			print(headset_refresh_rate)
+			headset_refresh_set = true
+	
+	_fastest_step_s = .132 * (headset_refresh_rate/72.0); # faster then this will not detect a new step - new TB note - this was 10.0/72.0, e.g., .132, tied to quest 72 refresh
+	_slowest_step_s = .347 * (headset_refresh_rate/72.0); # slower than this will not detect a high point step - new TB note - this was 25.0/72.0, e.g., .347, tied to quest 72 refresh
+	
+	step_duration = 20.0 / headset_refresh_rate #20.0 / 72.0; # I had ~ 30 frames between steps...   #TB note - this was hard coded at 20/72, trying to match headset refresh rate, was also marked as a const instead of a variable	
+		
+		
+		
+		
 		
 	var headset_height = vr_camera.transform.origin.y;
 	#was headset_height = player_body.camera_node.transform.origin.y + player_body.player_radius but only worked on quest
