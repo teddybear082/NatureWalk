@@ -20,8 +20,8 @@ extends MovementProvider
 
 ## Movement provider order
 export var order := 5
-export var speed_walking = 2.0
-export var speed_jogging = 4.0
+export var speed_walking := 2.0
+export var speed_jogging := 4.0
 
 
 const _height_ringbuffer_size := 15; # full ring buffer is 15; lower latency can be achieved by accessing only a subset
@@ -102,10 +102,11 @@ func _ready():
 	player_body = fp_controller.get_node("PlayerBody")
 	
 	if fp_controller.get_node("Configuration").get_refresh_rate() != 0:
-		print("Walk in place got a zero refresh rate back from Configuration node")
 		headset_refresh_rate = fp_controller.get_node("Configuration").get_refresh_rate()
+		print("Walk in place got a headset refresh rate from the headset:")
+		print(headset_refresh_rate)
 	
-	print("Walk in place detects headset refresh rate as:")
+	print("Walk in place is using refresh rate as:")
 	print(headset_refresh_rate)
 	
 	_fastest_step_s = .132 * (headset_refresh_rate/72.0); # faster then this will not detect a new step - new TB note - this was 10.0/72.0, e.g., .132, tied to quest 72 refresh

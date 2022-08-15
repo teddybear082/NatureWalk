@@ -302,5 +302,4 @@ common/enable_pause_aware_picking=true
 [rendering]
 
 vram_compression/import_etc=true
-vram_compression/import_etc2=false
 quality/filters/anisotropic_filter_level=1
