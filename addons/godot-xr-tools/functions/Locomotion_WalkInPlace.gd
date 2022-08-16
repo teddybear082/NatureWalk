@@ -40,6 +40,15 @@ export var max_speed = 10.0
 #factor impacting lerp regarding how quickly player moves back to zero speed when stopping jogging or between speeds (1.0 = immediate, 0.0-.99 = slower, with .01 being slowest)
 export var speed_transition_factor := .80
 
+#turn on ability to use strafing controller to activate strafe
+export var controller_strafing := false
+
+#turn on ability to use head titlt to activate strafe
+export var headset_tilt_strafe := false
+
+#turn on head tilt back to move back
+export var headset_tilt_to_reverse = false
+
 const _height_ringbuffer_size := 15; # full ring buffer is 15; lower latency can be achieved by accessing only a subset
 var _height_ringbuffer_pos := 0;
 var _height_ringbuffer := Array()
@@ -74,7 +83,7 @@ const _time_until_continous_step_reset = 2.0;
 
 # indicator to check if currently in a moving state (means steps detected)
 var is_moving = false;
-#var is_strafing = false
+var is_strafing = false
 
 var _current_height_estimate := 0.0;
 
@@ -238,19 +247,42 @@ func physics_movement(delta: float, player_body: PlayerBody, _disabled: bool):
 	if (is_jogging()):
 		print("jogging detected")
 		speed = speed_jogging;
-		
-	#detect if player wants to strafe and if so, strafe direction, by direction of strafe controller
-	#var solve_controller_direction = vr_camera.global_transform.basis.x.dot(-l_controller.global_transform.basis.z)
-	#print(solve_controller_direction)
-	#if solve_controller_direction > -.60 and solve_controller_direction < .60:
-	#	is_strafing = false
-	#if solve_controller_direction <= -0.60:
-	#	is_strafing = true
-	#	speed = -speed
-	#if solve_controller_direction >= .60:
-	#	is_strafing = true
-		
 	
+	#print("camera_transform.z.y is: ")
+	#print(-vr_camera.transform.basis.z.y)
+	
+	#detect if head tilted far enough back to go backwards instead if head rotate to reverse is turned on
+	if headset_tilt_to_reverse == true and -vr_camera.transform.basis.z.y >= .40:
+		speed = -speed
+			
+	#detect if player wants to strafe with controller and if so, strafe direction, by direction of strafe controller
+	if controller_strafing == true:
+		var solve_controller_direction = vr_camera.global_transform.basis.x.dot(-l_controller.global_transform.basis.z)
+		#print(solve_controller_direction)
+		if solve_controller_direction > -.70 and solve_controller_direction < .70:
+			is_strafing = false
+		if solve_controller_direction <= -0.70:
+			is_strafing = true
+			speed = -speed
+		if solve_controller_direction >= .70:
+			is_strafing = true
+	
+	#detect if player wants to strafe with headset tilt, and if so, strafe to direction of head tilt	
+	if headset_tilt_strafe == true:
+		print("camera basis x.y is")
+		print(vr_camera.transform.basis.x.y)
+			#final angle of the difference, return in degrees to make more human-readable
+		#print(str(angle))
+		#Subtract 90 from angle to see if moving left or right
+		var strafe_direction = vr_camera.transform.basis.x.y
+		if strafe_direction > -.30 and strafe_direction < .30:
+			is_strafing = false
+		if strafe_direction >= .30:
+			is_strafing = true
+			speed = -speed
+		if strafe_direction <= -.30:
+			is_strafing = true
+			
 	
 	#only trigger movement if script says player is actually moving
 	if is_moving == true:
@@ -260,13 +292,13 @@ func physics_movement(delta: float, player_body: PlayerBody, _disabled: bool):
 		
 		
 		#strafe player if script detects player wants to strafe by head movement
-	#	if is_strafing == true:
-	#		player_body.ground_control_velocity.y = 0
-	#		player_body.ground_control_velocity.x += speed #+=lerp(player_body.ground_control_velocity.x, speed, speed_transition_factor)
+		if is_strafing == true:
+			player_body.ground_control_velocity.y = 0
+			player_body.ground_control_velocity.x += speed #+=lerp(player_body.ground_control_velocity.x, speed, speed_transition_factor)
 
 		# Clamp ground control like in direct movement script
 		player_body.ground_control_velocity.y = clamp(player_body.ground_control_velocity.y, -max_speed, max_speed)
-#		player_body.ground_control_velocity.x = clamp(player_body.ground_control_velocity.x, -max_speed, max_speed)
+		player_body.ground_control_velocity.x = clamp(player_body.ground_control_velocity.x, -max_speed, max_speed)
 		
 		print("player ground control velocity is:")
 		print(player_body.ground_control_velocity)
