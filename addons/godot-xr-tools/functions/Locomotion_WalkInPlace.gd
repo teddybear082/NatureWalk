@@ -293,8 +293,8 @@ func physics_movement(delta: float, player_body: PlayerBody, _disabled: bool):
 		
 		#strafe player if script detects player wants to strafe by head movement
 		if is_strafing == true:
-			player_body.ground_control_velocity.y = 0
-			player_body.ground_control_velocity.x += speed #+=lerp(player_body.ground_control_velocity.x, speed, speed_transition_factor)
+			player_body.ground_control_velocity.y = lerp(player_body.ground_control_velocity.y, 0, speed_transition_factor)
+			player_body.ground_control_velocity.x += .5 * speed #+=lerp(player_body.ground_control_velocity.x, speed, speed_transition_factor)
 
 		# Clamp ground control like in direct movement script
 		player_body.ground_control_velocity.y = clamp(player_body.ground_control_velocity.y, -max_speed, max_speed)
