@@ -118,7 +118,7 @@ func _ready():
 	_fastest_step_s = .132 * (72.0/headset_refresh_rate); # faster then this will not detect a new step - new TB note - this was 10.0/72.0, e.g., .132, tied to quest 72 refresh
 	_slowest_step_s = .347 * (headset_refresh_rate/72.0); # slower than this will not detect a high point step - new TB note - this was 25.0/72.0, e.g., .347, tied to quest 72 refresh
 	
-	step_duration = (20.0 * (headset_refresh_rate/72.0)) / 72.0 #20.0 / 72.0; # I had ~ 30 frames between steps...   #TB note - this was hard coded at 20/72, trying to match headset refresh rate, was also marked as a const instead of a variable
+	step_duration = (30.0 * (headset_refresh_rate/72.0)) / 72.0 #20.0 / 72.0; # I had ~ 30 frames between steps...   #TB note - this was hard coded at 20/72, trying to match headset refresh rate, was also marked as a const instead of a variable
 	
 	
 	_height_ringbuffer.resize(_height_ringbuffer_size);
@@ -245,7 +245,7 @@ func physics_movement(delta: float, player_body: PlayerBody, _disabled: bool):
 	var speed = speed_walking;
 	
 	if (is_jogging()):
-		print("jogging detected")
+#		print("jogging detected")
 		speed = speed_jogging;
 	
 	#print("camera_transform.z.y is: ")
@@ -269,8 +269,8 @@ func physics_movement(delta: float, player_body: PlayerBody, _disabled: bool):
 	
 	#detect if player wants to strafe with headset tilt, and if so, strafe to direction of head tilt	
 	if headset_tilt_strafe == true:
-		print("camera basis x.y is")
-		print(vr_camera.transform.basis.x.y)
+#		print("camera basis x.y is")
+#		print(vr_camera.transform.basis.x.y)
 			#final angle of the difference, return in degrees to make more human-readable
 		#print(str(angle))
 		#Subtract 90 from angle to see if moving left or right
@@ -293,19 +293,20 @@ func physics_movement(delta: float, player_body: PlayerBody, _disabled: bool):
 		
 		#strafe player if script detects player wants to strafe by head movement
 		if is_strafing == true:
-			player_body.ground_control_velocity.y = lerp(player_body.ground_control_velocity.y, 0, speed_transition_factor)
+			player_body.ground_control_velocity.y = 0
+#			player_body.ground_control_velocity.y = lerp(player_body.ground_control_velocity.y, 0, speed_transition_factor)
 			player_body.ground_control_velocity.x += .5 * speed #+=lerp(player_body.ground_control_velocity.x, speed, speed_transition_factor)
 
 		# Clamp ground control like in direct movement script
 		player_body.ground_control_velocity.y = clamp(player_body.ground_control_velocity.y, -max_speed, max_speed)
 		player_body.ground_control_velocity.x = clamp(player_body.ground_control_velocity.x, -max_speed, max_speed)
 		
-		print("player ground control velocity is:")
-		print(player_body.ground_control_velocity)
+#		print("player ground control velocity is:")
+#		print(player_body.ground_control_velocity)
 		
 	else:  #this means no steps are detected, player is standing
-#		player_body.ground_control_velocity.y = 0 
-		player_body.ground_control_velocity.y = lerp(player_body.ground_control_velocity.y, 0, speed_transition_factor)
+		player_body.ground_control_velocity.y = 0 
+#		player_body.ground_control_velocity.y = lerp(player_body.ground_control_velocity.y, 0, speed_transition_factor)
 		
 		
 # NOTE: this needs to be in the _process as all the values are tied to the actual display framerate of 72hz
@@ -322,9 +323,9 @@ func _process(dt):
 			print("Walk in place got a headset refresh rate from the headset:")
 			print(headset_refresh_rate)
 			headset_refresh_set = true
-			_fastest_step_s = .132 * (72.0/headset_refresh_rate); # faster then this will not detect a new step - new TB note - this was 10.0/72.0, e.g., .132, tied to quest 72 refresh
-			_slowest_step_s = .347 * (headset_refresh_rate/72.0); # slower than this will not detect a high point step - new TB note - this was 25.0/72.0, e.g., .347, tied to quest 72 refresh
-			step_duration = (20.0 * (headset_refresh_rate/72.0)) / 72.0 #20.0 / 72.0; # I had ~ 30 frames between steps...   #TB note - this was hard coded at 20/72, trying to match headset refresh rate, was also marked as a const instead of a variable
+			_fastest_step_s = 10 * dt #.132 * (72.0/headset_refresh_rate); # faster then this will not detect a new step - new TB note - this was 10.0/72.0, e.g., .132, tied to quest 72 refresh
+			_slowest_step_s = 50 * dt #.347 * (headset_refresh_rate/72.0); # slower than this will not detect a high point step - new TB note - this was 25.0/72.0, e.g., .347, tied to quest 72 refresh
+			step_duration = 30 * dt#(20.0 * (headset_refresh_rate/72.0)) / 72.0 #20.0 / 72.0; # I had ~ 30 frames between steps...   #TB note - this was hard coded at 20/72, trying to match headset refresh rate, was also marked as a const instead of a variable
 	
 		
 	

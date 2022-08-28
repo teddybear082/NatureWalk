@@ -43,3 +43,6 @@ margin = 0.004
 
 [node name="Locomotion_WalkInPlace" parent="." index="7" instance=ExtResource( 7 )]
 fpcontroller_path = NodePath("..")
+speed_transition_factor = 0.3
+headset_tilt_strafe = true
+headset_tilt_to_reverse = true
